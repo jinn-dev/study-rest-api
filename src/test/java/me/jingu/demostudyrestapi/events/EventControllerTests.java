@@ -44,6 +44,40 @@ class EventControllerTests {
 	
 	@Test
 	public void createEvent() throws Exception {
+		EventDto event = EventDto.builder()
+				.name("Spring")
+				.description("REST API Development with Spring")
+				.beginEnrollmentDateTime(LocalDateTime.of(2020, 05, 10, 11, 30))
+				.closeEnrollmentDateTime(LocalDateTime.of(2020, 05, 12, 11, 30))
+				.beginEventDateTime(LocalDateTime.of(2020, 05, 13, 20, 12, 30))
+				.endEventDateTime(LocalDateTime.of(2020, 05, 20, 12, 30))
+				.basePrice(100)
+				.maxPrice(200)
+				.limitOfEnrollment(100)
+				.location("강남역 DB2 스타쉽 팩토리")
+				.build();
+		
+		//event.setId(10);
+		//Mockito.when(eventRepository.save(event)).thenReturn(event);
+		
+		
+		
+		mockMvc.perform(post("/api/events/")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaTypes.HAL_JSON)
+				.content(objectMapper.writeValueAsString(event)))
+		.andDo(print())	//어떤 요청과 어떤 응답 받았는지 확인 가능
+		.andExpect(status().isCreated())
+		.andExpect(jsonPath("id").exists())
+		.andExpect(header().exists(HttpHeaders.LOCATION))
+		.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+		.andExpect(jsonPath("id").value(1))
+		.andExpect(jsonPath("free").value(false))
+		.andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
+	}
+	
+	@Test
+	public void createEvent_Bad_Request() throws Exception {
 		Event event = Event.builder()
 				.id(100)
 				.name("Spring")
@@ -71,14 +105,7 @@ class EventControllerTests {
 				.accept(MediaTypes.HAL_JSON)
 				.content(objectMapper.writeValueAsString(event)))
 		.andDo(print())	//어떤 요청과 어떤 응답 받았는지 확인 가능
-		.andExpect(status().isCreated())
-		.andExpect(jsonPath("id").exists())
-		.andExpect(header().exists(HttpHeaders.LOCATION))
-		.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
-		.andExpect(jsonPath("id").value(1))
-		.andExpect(jsonPath("free").value(false))
-		.andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
-		//입력값 제한: id 또는 입력받은 데이터로 계산해야 하는 값들은 입력을 받지 말아야 한다. -> dto 사용
+		.andExpect(status().isBadRequest());
 	}
 
 }
